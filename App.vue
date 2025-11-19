@@ -8,107 +8,6 @@
           <button @click="resetPoints" class="chart-reset-button">Reset</button>
         </div>
         <div ref="chartRef" class="chart" :class="{ 'shift-mode': isShiftPressed }"></div>
-        
-        <!-- Coordinate Controls -->
-        <div class="coordinate-controls">
-          <div class="coordinates-grid">
-            <div class="coordinate-item">
-              <label>Point A:</label>
-              <div class="coord-inputs">
-                <div class="input-group">
-                  <label class="axis-label">{{ params.xUnit }}</label>
-                  <input 
-                    v-model.number="points.A.x" 
-                    type="number" 
-                    min="0" 
-                    max="1" 
-                    step="0.001"
-                    class="coord-input"
-                    @blur="validateCoordinate('A', 'x', $event)"
-                    placeholder="0.000"
-                  />
-                </div>
-                <div class="input-group">
-                  <label class="axis-label">{{ params.yUnit }}</label>
-                  <input 
-                    v-model.number="points.A.y" 
-                    type="number" 
-                    min="0" 
-                    max="1" 
-                    step="0.001"
-                    class="coord-input"
-                    @blur="validateCoordinate('A', 'y', $event)"
-                    placeholder="0.000"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div class="coordinate-item">
-              <label>Point B:</label>
-              <div class="coord-inputs">
-                <div class="input-group">
-                  <label class="axis-label">{{ params.xUnit }}</label>
-                  <input 
-                    v-model.number="points.B.x" 
-                    type="number" 
-                    min="0" 
-                    max="1" 
-                    step="0.001"
-                    class="coord-input"
-                    @blur="validateCoordinate('B', 'x', $event)"
-                    placeholder="0.000"
-                  />
-                </div>
-                <div class="input-group">
-                  <label class="axis-label">{{ params.yUnit }}</label>
-                  <input 
-                    v-model.number="points.B.y" 
-                    type="number" 
-                    min="0" 
-                    max="1" 
-                    step="0.001"
-                    class="coord-input"
-                    @blur="validateCoordinate('B', 'y', $event)"
-                    placeholder="0.000"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div class="coordinate-item">
-              <label>Point C:</label>
-              <div class="coord-inputs">
-                <div class="input-group">
-                  <label class="axis-label">{{ params.xUnit }}</label>
-                  <input 
-                    v-model.number="points.C.x" 
-                    type="number" 
-                    min="0" 
-                    max="1" 
-                    step="0.001"
-                    class="coord-input"
-                    @blur="validateCoordinate('C', 'x', $event)"
-                    placeholder="0.000"
-                  />
-                </div>
-                <div class="input-group">
-                  <label class="axis-label">{{ params.yUnit }}</label>
-                  <input 
-                    v-model.number="points.C.y" 
-                    type="number" 
-                    min="0" 
-                    max="1" 
-                    step="0.001"
-                    class="coord-input"
-                    @blur="validateCoordinate('C', 'y', $event)"
-                    placeholder="0.000"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
       
       <!-- Right Column: Controls and Output -->
@@ -270,6 +169,107 @@
             </div>
           </div>
         </div>
+        
+        <!-- Coordinate Controls -->
+        <div class="coordinate-controls">
+          <div class="coordinates-grid">
+            <div class="coordinate-item">
+              <label>Point A:</label>
+              <div class="coord-inputs">
+                <div class="input-group">
+                  <label class="axis-label">{{ params.xUnit }}</label>
+                  <input 
+                    v-model.number="points.A.x" 
+                    type="number" 
+                    min="0" 
+                    max="1" 
+                    step="0.001"
+                    class="coord-input"
+                    @blur="validateCoordinate('A', 'x', $event)"
+                    placeholder="0.000"
+                  />
+                </div>
+                <div class="input-group">
+                  <label class="axis-label">{{ params.yUnit }}</label>
+                  <input 
+                    v-model.number="points.A.y" 
+                    type="number" 
+                    min="0" 
+                    max="1" 
+                    step="0.001"
+                    class="coord-input"
+                    @blur="validateCoordinate('A', 'y', $event)"
+                    placeholder="0.000"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div class="coordinate-item">
+              <label>Point B:</label>
+              <div class="coord-inputs">
+                <div class="input-group">
+                  <label class="axis-label">{{ params.xUnit }}</label>
+                  <input 
+                    v-model.number="points.B.x" 
+                    type="number" 
+                    min="0" 
+                    max="1" 
+                    step="0.001"
+                    class="coord-input"
+                    @blur="validateCoordinate('B', 'x', $event)"
+                    placeholder="0.000"
+                  />
+                </div>
+                <div class="input-group">
+                  <label class="axis-label">{{ params.yUnit }}</label>
+                  <input 
+                    v-model.number="points.B.y" 
+                    type="number" 
+                    min="0" 
+                    max="1" 
+                    step="0.001"
+                    class="coord-input"
+                    @blur="validateCoordinate('B', 'y', $event)"
+                    placeholder="0.000"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div class="coordinate-item">
+              <label>Point C:</label>
+              <div class="coord-inputs">
+                <div class="input-group">
+                  <label class="axis-label">{{ params.xUnit }}</label>
+                  <input 
+                    v-model.number="points.C.x" 
+                    type="number" 
+                    min="0" 
+                    max="1" 
+                    step="0.001"
+                    class="coord-input"
+                    @blur="validateCoordinate('C', 'x', $event)"
+                    placeholder="0.000"
+                  />
+                </div>
+                <div class="input-group">
+                  <label class="axis-label">{{ params.yUnit }}</label>
+                  <input 
+                    v-model.number="points.C.y" 
+                    type="number" 
+                    min="0" 
+                    max="1" 
+                    step="0.001"
+                    class="coord-input"
+                    @blur="validateCoordinate('C', 'y', $event)"
+                    placeholder="0.000"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -334,51 +334,182 @@ const transformedValues = computed(() => ({
 }))
 
 // ===== CHART CONFIGURATION =====
-const getChartOptions = () => ({
-  title: {
-    text: params.domain && params.domain.toUpperCase() !== 'NA' ? params.domain : '',
-    left: 'center',
-    top: '2%',
-    textStyle: {
-      fontSize: 16,
-      fontWeight: 'normal'
-    }
-  },
-  grid: {
-    left: '15%',
-    right: '10%',
-    bottom: '15%',
-    top: params.domain && params.domain.toUpperCase() !== 'NA' ? '12%' : '10%'
-  },
-  xAxis: {
-    type: 'value',
-    min: 0,
-    max: 1,
-    name: params.xUnit,
-    nameLocation: 'middle',
-    nameGap: 25,
-    nameTextStyle: {
-      fontSize: 12
+const getChartOptions = () => {
+  // Get canonical A/B points for dominance buckets (matching the Python code)
+  const canonicalA = { x: 0.25, y: 0.75 }
+  const canonicalB = { x: 0.75, y: 0.25 }
+  
+  return {
+    title: {
+      text: params.domain && params.domain.toUpperCase() !== 'NA' ? params.domain : '',
+      left: 'center',
+      top: '2%',
+      textStyle: {
+        fontSize: 16,
+        fontWeight: 'normal'
+      }
     },
-    axisLabel: {
-      formatter: (value) => value.toFixed(1)
-    }
-  },
-  yAxis: {
-    type: 'value',
-    min: 0,
-    max: 1,
-    name: params.yUnit,
-    nameLocation: 'middle',
-    nameGap: 40,
-    nameTextStyle: {
-      fontSize: 12
+    legend: {
+      data: ['Inferior', 'Attraction A', 'Comp/Sim', 'Attraction B', 'Superior'],
+      bottom: '1%',
+      itemWidth: 15,
+      itemHeight: 10,
+      textStyle: {
+        fontSize: 9
+      },
+      itemGap: 8
     },
-    axisLabel: {
-      formatter: (value) => value.toFixed(1)
-    }
-  },
-  series: [
+    grid: {
+      left: '15%',
+      right: '10%',
+      bottom: '18%',
+      top: params.domain && params.domain.toUpperCase() !== 'NA' ? '12%' : '10%'
+    },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      max: 1,
+      name: params.xUnit,
+      nameLocation: 'middle',
+      nameGap: 25,
+      nameTextStyle: {
+        fontSize: 12
+      },
+      axisLabel: {
+        formatter: (value) => value.toFixed(1)
+      }
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: 1,
+      name: params.yUnit,
+      nameLocation: 'middle',
+      nameGap: 40,
+      nameTextStyle: {
+        fontSize: 12
+      },
+      axisLabel: {
+        formatter: (value) => value.toFixed(1)
+      }
+    },
+    series: [
+      // Background regions (dominance buckets)
+      {
+        name: 'Inferior',
+        type: 'custom',
+        renderItem: (params, api) => {
+          const x0 = api.coord([0, 0])
+          const x1 = api.coord([canonicalA.x, canonicalB.y])
+          return {
+            type: 'rect',
+            shape: {
+              x: x0[0],
+              y: x1[1],
+              width: x1[0] - x0[0],
+              height: x0[1] - x1[1]
+            },
+            style: {
+              fill: 'rgba(144, 238, 144, 0.5)' // lightgreen
+            },
+            z: -2
+          }
+        },
+        data: [0],
+        silent: true
+      },
+      {
+        name: 'Attraction A',
+        type: 'custom',
+        renderItem: (params, api) => {
+          const x0 = api.coord([0, canonicalB.y])
+          const x1 = api.coord([canonicalA.x, canonicalA.y])
+          return {
+            type: 'rect',
+            shape: {
+              x: x0[0],
+              y: x1[1],
+              width: x1[0] - x0[0],
+              height: x0[1] - x1[1]
+            },
+            style: {
+              fill: 'rgba(173, 216, 230, 0.5)' // lightblue
+            },
+            z: -2
+          }
+        },
+        data: [0],
+        silent: true
+      },
+      {
+        name: 'Comp/Sim',
+        type: 'custom',
+        renderItem: (params, api) => {
+          const x0 = api.coord([canonicalA.x, canonicalB.y])
+          const x1 = api.coord([canonicalB.x, canonicalA.y])
+          return {
+            type: 'rect',
+            shape: {
+              x: x0[0],
+              y: x1[1],
+              width: x1[0] - x0[0],
+              height: x0[1] - x1[1]
+            },
+            style: {
+              fill: 'rgba(255, 255, 0, 0.5)' // yellow
+            },
+            z: -2
+          }
+        },
+        data: [0],
+        silent: true
+      },
+      {
+        name: 'Attraction B',
+        type: 'custom',
+        renderItem: (params, api) => {
+          const x0 = api.coord([canonicalA.x, 0])
+          const x1 = api.coord([canonicalB.x, canonicalB.y])
+          return {
+            type: 'rect',
+            shape: {
+              x: x0[0],
+              y: x1[1],
+              width: x1[0] - x0[0],
+              height: x0[1] - x1[1]
+            },
+            style: {
+              fill: 'rgba(135, 206, 235, 0.5)' // skyblue
+            },
+            z: -2
+          }
+        },
+        data: [0],
+        silent: true
+      },
+      {
+        name: 'Superior',
+        type: 'custom',
+        renderItem: (params, api) => {
+          const x0 = api.coord([canonicalB.x, canonicalA.y])
+          const x1 = api.coord([1, 1])
+          return {
+            type: 'rect',
+            shape: {
+              x: x0[0],
+              y: x1[1],
+              width: x1[0] - x0[0],
+              height: x0[1] - x1[1]
+            },
+            style: {
+              fill: 'rgba(250, 128, 114, 0.5)' // salmon
+            },
+            z: -2
+          }
+        },
+        data: [0],
+        silent: true
+      },
     {
       type: 'scatter',
       data: [
@@ -396,8 +527,7 @@ const getChartOptions = () => ({
         color: '#333'
       },
       emphasis: {
-        focus: 'series',
-        scale: 1.1
+        disabled: true
       }
     },
     {
@@ -429,7 +559,8 @@ const getChartOptions = () => ({
       return ''
     }
   }
-})
+  }
+}
 
 // ===== CHART FUNCTIONS =====
 // Initialize chart
@@ -678,7 +809,6 @@ onUnmounted(() => {
 .chart-container {
   flex: 0 0 50%;
   background: white;
-  border: 1px solid #ddd;
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
@@ -728,11 +858,9 @@ onUnmounted(() => {
 
 .chart {
   width: 100%;
-  height: 0;
-  padding-bottom: 75%;
+  aspect-ratio: 1 / 1;
   position: relative;
   border: 1px solid #ccc;
-  flex: 1;
   transition: all 0.2s ease;
 }
 
