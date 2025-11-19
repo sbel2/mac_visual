@@ -3,7 +3,11 @@
     <div class="main-layout">
       <!-- Left Column: Interactive Chart -->
       <div class="chart-container">
-        <div ref="chartRef" class="chart"></div>
+        <div class="chart-header">
+          <div class="chart-hint" :class="{ 'shift-active': isShiftPressed }">{{ isShiftPressed ? '🔄 Triangle Move Mode Active' : 'Tip: Hold Shift while dragging to move the entire triangle' }}</div>
+          <button @click="resetPoints" class="chart-reset-button">Reset</button>
+        </div>
+        <div ref="chartRef" class="chart" :class="{ 'shift-mode': isShiftPressed }"></div>
         
         <!-- Coordinate Controls -->
         <div class="coordinate-controls">
@@ -12,7 +16,7 @@
               <label>Point A:</label>
               <div class="coord-inputs">
                 <div class="input-group">
-                  <label class="axis-label">Sq Ft</label>
+                  <label class="axis-label">{{ params.xUnit }}</label>
                   <input 
                     v-model.number="points.A.x" 
                     type="number" 
@@ -20,12 +24,12 @@
                     max="1" 
                     step="0.001"
                     class="coord-input"
-                    @input="validateCoordinate('A', 'x', $event)"
+                    @blur="validateCoordinate('A', 'x', $event)"
                     placeholder="0.000"
                   />
                 </div>
                 <div class="input-group">
-                  <label class="axis-label">Econ</label>
+                  <label class="axis-label">{{ params.yUnit }}</label>
                   <input 
                     v-model.number="points.A.y" 
                     type="number" 
@@ -33,7 +37,7 @@
                     max="1" 
                     step="0.001"
                     class="coord-input"
-                    @input="validateCoordinate('A', 'y', $event)"
+                    @blur="validateCoordinate('A', 'y', $event)"
                     placeholder="0.000"
                   />
                 </div>
@@ -44,7 +48,7 @@
               <label>Point B:</label>
               <div class="coord-inputs">
                 <div class="input-group">
-                  <label class="axis-label">Sq Ft</label>
+                  <label class="axis-label">{{ params.xUnit }}</label>
                   <input 
                     v-model.number="points.B.x" 
                     type="number" 
@@ -52,12 +56,12 @@
                     max="1" 
                     step="0.001"
                     class="coord-input"
-                    @input="validateCoordinate('B', 'x', $event)"
+                    @blur="validateCoordinate('B', 'x', $event)"
                     placeholder="0.000"
                   />
                 </div>
                 <div class="input-group">
-                  <label class="axis-label">Econ</label>
+                  <label class="axis-label">{{ params.yUnit }}</label>
                   <input 
                     v-model.number="points.B.y" 
                     type="number" 
@@ -65,7 +69,7 @@
                     max="1" 
                     step="0.001"
                     class="coord-input"
-                    @input="validateCoordinate('B', 'y', $event)"
+                    @blur="validateCoordinate('B', 'y', $event)"
                     placeholder="0.000"
                   />
                 </div>
@@ -76,7 +80,7 @@
               <label>Point C:</label>
               <div class="coord-inputs">
                 <div class="input-group">
-                  <label class="axis-label">Sq Ft</label>
+                  <label class="axis-label">{{ params.xUnit }}</label>
                   <input 
                     v-model.number="points.C.x" 
                     type="number" 
@@ -84,12 +88,12 @@
                     max="1" 
                     step="0.001"
                     class="coord-input"
-                    @input="validateCoordinate('C', 'x', $event)"
+                    @blur="validateCoordinate('C', 'x', $event)"
                     placeholder="0.000"
                   />
                 </div>
                 <div class="input-group">
-                  <label class="axis-label">Econ</label>
+                  <label class="axis-label">{{ params.yUnit }}</label>
                   <input 
                     v-model.number="points.C.y" 
                     type="number" 
@@ -97,7 +101,7 @@
                     max="1" 
                     step="0.001"
                     class="coord-input"
-                    @input="validateCoordinate('C', 'y', $event)"
+                    @blur="validateCoordinate('C', 'y', $event)"
                     placeholder="0.000"
                   />
                 </div>
@@ -119,50 +123,102 @@
           <h3>Parameter Controls</h3>
           
           <div class="control-group">
-            <h4>Square Footage (sq. ft.)</h4>
+            <h4>X-Axis (Horizontal)</h4>
+            <div class="input-row">
+              <label>Name:</label>
+              <input 
+                v-model="params.xName" 
+                type="text" 
+                class="number-input"
+                placeholder="e.g., Square Footage"
+              />
+            </div>
+            <div class="input-row">
+              <label>Unit:</label>
+              <input 
+                v-model="params.xUnit" 
+                type="text" 
+                class="number-input"
+                placeholder="e.g., sq. ft."
+              />
+            </div>
             <div class="input-row">
               <label>Min:</label>
               <input 
-                v-model.number="params.sqftMin" 
+                v-model.number="params.xMin" 
                 type="number" 
-                min="100" 
-                step="50"
+                step="1"
                 class="number-input"
               />
             </div>
             <div class="input-row">
               <label>Max:</label>
               <input 
-                v-model.number="params.sqftMax" 
+                v-model.number="params.xMax" 
                 type="number" 
-                min="params.sqftMin + 100" 
-                step="50"
+                step="1"
                 class="number-input"
               />
+            </div>
+            <div class="input-row checkbox-row">
+              <label>
+                <input 
+                  v-model="params.xInverse" 
+                  type="checkbox"
+                  class="checkbox-input"
+                />
+                Inverse (lower is better)
+              </label>
             </div>
           </div>
           
           <div class="control-group">
-            <h4>Price ($/month)</h4>
+            <h4>Y-Axis (Vertical)</h4>
+            <div class="input-row">
+              <label>Name:</label>
+              <input 
+                v-model="params.yName" 
+                type="text" 
+                class="number-input"
+                placeholder="e.g., Price"
+              />
+            </div>
+            <div class="input-row">
+              <label>Unit:</label>
+              <input 
+                v-model="params.yUnit" 
+                type="text" 
+                class="number-input"
+                placeholder="e.g., $/month"
+              />
+            </div>
             <div class="input-row">
               <label>Min:</label>
               <input 
-                v-model.number="params.priceMin" 
+                v-model.number="params.yMin" 
                 type="number" 
-                min="100" 
-                step="50"
+                step="1"
                 class="number-input"
               />
             </div>
             <div class="input-row">
               <label>Max:</label>
               <input 
-                v-model.number="params.priceMax" 
+                v-model.number="params.yMax" 
                 type="number" 
-                min="params.priceMin + 100" 
-                step="50"
+                step="1"
                 class="number-input"
               />
+            </div>
+            <div class="input-row checkbox-row">
+              <label>
+                <input 
+                  v-model="params.yInverse" 
+                  type="checkbox"
+                  class="checkbox-input"
+                />
+                Inverse (lower is better)
+              </label>
             </div>
           </div>
           
@@ -173,45 +229,29 @@
         <div class="generated-output">
           <h3>Problem</h3>
           
-          <!-- Preset Trial Buttons -->
-          <div class="preset-trials">
-            <h4>Preset Trials</h4>
-            <div class="trial-buttons">
-              <button @click="loadTrial('similarity')" class="trial-button">
-                <div class="trial-name">Similarity</div>
-              </button>
-              <button @click="loadTrial('compromise')" class="trial-button">
-                <div class="trial-name">Compromise</div>
-              </button>
-              <button @click="loadTrial('attraction')" class="trial-button">
-                <div class="trial-name">Attraction</div>
-              </button>
-            </div>
-          </div>
-          
           <div class="problem-description">
             <div class="option-cards">
               <div class="option-card">
                 <div class="option-header">Option A</div>
                 <div class="option-details">
-                  <div>Sq ft: {{ transformedValues.A.sqft }} sq ft</div>
-                  <div>Price: ${{ transformedValues.A.price }}</div>
+                  <div>{{ params.xName }}: {{ transformedValues.A.x }} {{ params.xUnit }}</div>
+                  <div>{{ params.yName }}: {{ transformedValues.A.y }} {{ params.yUnit }}</div>
                 </div>
               </div>
               
               <div class="option-card">
                 <div class="option-header">Option B</div>
                 <div class="option-details">
-                  <div>Sq ft: {{ transformedValues.B.sqft }} sq ft</div>
-                  <div>Price: ${{ transformedValues.B.price }}</div>
+                  <div>{{ params.xName }}: {{ transformedValues.B.x }} {{ params.xUnit }}</div>
+                  <div>{{ params.yName }}: {{ transformedValues.B.y }} {{ params.yUnit }}</div>
                 </div>
               </div>
               
               <div class="option-card">
                 <div class="option-header">Option C</div>
                 <div class="option-details">
-                  <div>Sq ft: {{ transformedValues.C.sqft }} sq ft</div>
-                  <div>Price: ${{ transformedValues.C.price }}</div>
+                  <div>{{ params.xName }}: {{ transformedValues.C.x }} {{ params.xUnit }}</div>
+                  <div>{{ params.yName }}: {{ transformedValues.C.y }} {{ params.yUnit }}</div>
                 </div>
               </div>
             </div>
@@ -229,57 +269,34 @@ import * as echarts from 'echarts'
 // ===== STATE =====
 const chartRef = ref(null)
 const showSettings = ref(false)
+const isShiftPressed = ref(false)
 let chartInstance = null
 
 // Points data (0-1 range for chart coordinates)
 const points = reactive({
-  A: { x: 0.250, y: 0.800 },
-  B: { x: 0.500, y: 0.500 },
-  C: { x: 0.850, y: 0.200 }
+  A: { x: 0.25, y: 0.75 },
+  B: { x: 0.850, y: 0.25 },
+  C: { x: 0.5, y: 0.5 }
 })
 
 // Parameter controls for real-world transformation
 const params = reactive({
-  sqftMin: 300,
-  sqftMax: 2500,
-  priceMin: 500,
-  priceMax: 4000
+  xName: 'Square Footage',
+  xUnit: 'sq. ft.',
+  xMin: 300,
+  xMax: 2500,
+  xInverse: false,
+  yName: 'Price',
+  yUnit: '$/month',
+  yMin: 500,
+  yMax: 4000,
+  yInverse: true
 })
 
-// Hardcoded trial configurations
-const HARDCODED_TRIALS = {
-  similarity: {
-    ID: "similarity_ABD",
-    "Context Category": "similarity",
-    arate: 0.31, aecon: 0.79,
-    brate: 0.79, becon: 0.31,
-    drate: 0.85, decon: 0.25
-  },
-  compromise: {
-    ID: "compromise_ABD",
-    "Context Category": "compromise",
-    arate: 0.32, aecon: 0.78,
-    brate: 0.78, becon: 0.32,
-    drate: 0.55, decon: 0.55
-  },
-  attraction: {
-    ID: "attraction_ABD",
-    "Context Category": "attraction",
-    arate: 0.33, aecon: 0.77,
-    brate: 0.77, becon: 0.33,
-    drate: 0.85, decon: 0.30
-  }
-}
-
 // ===== UTILITY FUNCTIONS =====
-function transformSquareFootage(q, min, max) {
-  const sqft = q * (max - min) + min
-  return Math.round(sqft)
-}
-
-function transformPrice(q, min, max) {
-  const price = (1 - q) * (max - min) + min
-  return Math.round(price)
+function transformValue(q, min, max, inverse) {
+  const value = inverse ? (1 - q) * (max - min) + min : q * (max - min) + min
+  return Math.round(value)
 }
 
 function roundToThreeDecimals(value) {
@@ -289,16 +306,16 @@ function roundToThreeDecimals(value) {
 // ===== COMPUTED PROPERTIES =====
 const transformedValues = computed(() => ({
   A: {
-    sqft: transformSquareFootage(points.A.x, params.sqftMin, params.sqftMax),
-    price: transformPrice(points.A.y, params.priceMin, params.priceMax)
+    x: transformValue(points.A.x, params.xMin, params.xMax, params.xInverse),
+    y: transformValue(points.A.y, params.yMin, params.yMax, params.yInverse)
   },
   B: {
-    sqft: transformSquareFootage(points.B.x, params.sqftMin, params.sqftMax),
-    price: transformPrice(points.B.y, params.priceMin, params.priceMax)
+    x: transformValue(points.B.x, params.xMin, params.xMax, params.xInverse),
+    y: transformValue(points.B.y, params.yMin, params.yMax, params.yInverse)
   },
   C: {
-    sqft: transformSquareFootage(points.C.x, params.sqftMin, params.sqftMax),
-    price: transformPrice(points.C.y, params.priceMin, params.priceMax)
+    x: transformValue(points.C.x, params.xMin, params.xMax, params.xInverse),
+    y: transformValue(points.C.y, params.yMin, params.yMax, params.yInverse)
   }
 }))
 
@@ -314,7 +331,7 @@ const getChartOptions = () => ({
     type: 'value',
     min: 0,
     max: 1,
-    name: 'Square Footage',
+    name: params.xUnit,
     nameLocation: 'middle',
     nameGap: 25,
     nameTextStyle: {
@@ -328,7 +345,7 @@ const getChartOptions = () => ({
     type: 'value',
     min: 0,
     max: 1,
-    name: 'Economy',
+    name: params.yUnit,
     nameLocation: 'middle',
     nameGap: 40,
     nameTextStyle: {
@@ -369,11 +386,11 @@ const getChartOptions = () => ({
         [points.A.x, points.A.y] // Close the triangle
       ],
       lineStyle: {
-        color: '#666',
-        width: 2
+        color: isShiftPressed.value ? '#0066cc' : '#666',
+        width: isShiftPressed.value ? 3 : 2
       },
       areaStyle: {
-        color: 'rgba(200, 200, 200, 0.3)'
+        color: isShiftPressed.value ? 'rgba(0, 102, 204, 0.2)' : 'rgba(200, 200, 200, 0.3)'
       },
       symbol: 'none',
       silent: true
@@ -381,10 +398,10 @@ const getChartOptions = () => ({
   ],
   tooltip: {
     trigger: 'item',
-    formatter: (params) => {
-      if (params.seriesType === 'scatter') {
-        const point = params.data
-        return `${point.name}<br/>Sq Ft: ${point.value[0].toFixed(3)}<br/>Econ: ${point.value[1].toFixed(3)}`
+    formatter: (p) => {
+      if (p.seriesType === 'scatter') {
+        const point = p.data
+        return `${point.name}<br/>${params.xUnit}: ${point.value[0].toFixed(3)}<br/>${params.yUnit}: ${point.value[1].toFixed(3)}`
       }
       return ''
     }
@@ -410,6 +427,30 @@ const initChart = () => {
     // Handle dragging interaction
     let isDragging = false
     let dragPointIndex = -1
+    let isDraggingTriangle = false
+    let lastMousePos = null
+    
+    // Helper function to check if point is inside triangle
+    const isPointInTriangle = (px, py, ax, ay, bx, by, cx, cy) => {
+      const v0x = cx - ax
+      const v0y = cy - ay
+      const v1x = bx - ax
+      const v1y = by - ay
+      const v2x = px - ax
+      const v2y = py - ay
+      
+      const dot00 = v0x * v0x + v0y * v0y
+      const dot01 = v0x * v1x + v0y * v1y
+      const dot02 = v0x * v2x + v0y * v2y
+      const dot11 = v1x * v1x + v1y * v1y
+      const dot12 = v1x * v2x + v1y * v2y
+      
+      const invDenom = 1 / (dot00 * dot11 - dot01 * dot01)
+      const u = (dot11 * dot02 - dot01 * dot12) * invDenom
+      const v = (dot00 * dot12 - dot01 * dot02) * invDenom
+      
+      return (u >= 0) && (v >= 0) && (u + v <= 1)
+    }
     
     chartInstance.getZr().on('mousedown', (e) => {
       const pointInPixel = [e.offsetX, e.offsetY]
@@ -418,17 +459,33 @@ const initChart = () => {
       if (pointInGrid && pointInGrid[0] >= 0 && pointInGrid[0] <= 1 && 
           pointInGrid[1] >= 0 && pointInGrid[1] <= 1) {
         
-        // Find which point is closest
-        const distances = [
-          Math.sqrt(Math.pow(pointInGrid[0] - points.A.x, 2) + Math.pow(pointInGrid[1] - points.A.y, 2)),
-          Math.sqrt(Math.pow(pointInGrid[0] - points.B.x, 2) + Math.pow(pointInGrid[1] - points.B.y, 2)),
-          Math.sqrt(Math.pow(pointInGrid[0] - points.C.x, 2) + Math.pow(pointInGrid[1] - points.C.y, 2))
-        ]
-        
-        const minDistance = Math.min(...distances)
-        if (minDistance < 0.15) {
-          dragPointIndex = distances.indexOf(minDistance)
+        // Check if shift is pressed and point is inside triangle
+        if (e.event.shiftKey && isPointInTriangle(
+          pointInGrid[0], pointInGrid[1],
+          points.A.x, points.A.y,
+          points.B.x, points.B.y,
+          points.C.x, points.C.y
+        )) {
+          // Enable triangle dragging from anywhere inside triangle
           isDragging = true
+          isDraggingTriangle = true
+          dragPointIndex = 0 // Use any point as reference
+          lastMousePos = pointInGrid
+        } else {
+          // Find which point is closest for individual point dragging
+          const distances = [
+            Math.sqrt(Math.pow(pointInGrid[0] - points.A.x, 2) + Math.pow(pointInGrid[1] - points.A.y, 2)),
+            Math.sqrt(Math.pow(pointInGrid[0] - points.B.x, 2) + Math.pow(pointInGrid[1] - points.B.y, 2)),
+            Math.sqrt(Math.pow(pointInGrid[0] - points.C.x, 2) + Math.pow(pointInGrid[1] - points.C.y, 2))
+          ]
+          
+          const minDistance = Math.min(...distances)
+          if (minDistance < 0.15) {
+            dragPointIndex = distances.indexOf(minDistance)
+            isDragging = true
+            isDraggingTriangle = false
+            lastMousePos = pointInGrid
+          }
         }
       }
     })
@@ -438,14 +495,46 @@ const initChart = () => {
         const pointInPixel = [e.offsetX, e.offsetY]
         const pointInGrid = chartInstance.convertFromPixel('grid', pointInPixel)
         
-        if (pointInGrid && pointInGrid[0] >= 0 && pointInGrid[0] <= 1 && 
-            pointInGrid[1] >= 0 && pointInGrid[1] <= 1) {
-          
-          // Update the dragged point
-          const pointNames = ['A', 'B', 'C']
-          const pointName = pointNames[dragPointIndex]
-          points[pointName].x = roundToThreeDecimals(Math.max(0, Math.min(1, pointInGrid[0])))
-          points[pointName].y = roundToThreeDecimals(Math.max(0, Math.min(1, pointInGrid[1])))
+        if (pointInGrid) {
+          if (isDraggingTriangle && lastMousePos) {
+            // Move entire triangle
+            const deltaX = pointInGrid[0] - lastMousePos[0]
+            const deltaY = pointInGrid[1] - lastMousePos[1]
+            
+            // Calculate new positions
+            const newA = {
+              x: points.A.x + deltaX,
+              y: points.A.y + deltaY
+            }
+            const newB = {
+              x: points.B.x + deltaX,
+              y: points.B.y + deltaY
+            }
+            const newC = {
+              x: points.C.x + deltaX,
+              y: points.C.y + deltaY
+            }
+            
+            // Check if all points stay within bounds
+            if (newA.x >= 0 && newA.x <= 1 && newA.y >= 0 && newA.y <= 1 &&
+                newB.x >= 0 && newB.x <= 1 && newB.y >= 0 && newB.y <= 1 &&
+                newC.x >= 0 && newC.x <= 1 && newC.y >= 0 && newC.y <= 1) {
+              points.A.x = roundToThreeDecimals(newA.x)
+              points.A.y = roundToThreeDecimals(newA.y)
+              points.B.x = roundToThreeDecimals(newB.x)
+              points.B.y = roundToThreeDecimals(newB.y)
+              points.C.x = roundToThreeDecimals(newC.x)
+              points.C.y = roundToThreeDecimals(newC.y)
+              lastMousePos = pointInGrid
+            }
+          } else if (pointInGrid[0] >= 0 && pointInGrid[0] <= 1 && 
+                     pointInGrid[1] >= 0 && pointInGrid[1] <= 1) {
+            // Move single point
+            const pointNames = ['A', 'B', 'C']
+            const pointName = pointNames[dragPointIndex]
+            points[pointName].x = roundToThreeDecimals(Math.max(0, Math.min(1, pointInGrid[0])))
+            points[pointName].y = roundToThreeDecimals(Math.max(0, Math.min(1, pointInGrid[1])))
+          }
         }
       }
     })
@@ -453,6 +542,8 @@ const initChart = () => {
     chartInstance.getZr().on('mouseup', () => {
       isDragging = false
       dragPointIndex = -1
+      isDraggingTriangle = false
+      lastMousePos = null
     })
   }
 }
@@ -467,24 +558,10 @@ const updateChart = () => {
 // ===== USER INTERACTION FUNCTIONS =====
 // Reset points to initial positions
 const resetPoints = () => {
-  points.A = { x: 0.250, y: 0.800 }
-  points.B = { x: 0.500, y: 0.500 }
-  points.C = { x: 0.850, y: 0.200 }
+  points.A = { x: 0.25, y: 0.75 }
+  points.B = { x: 0.850, y: 0.25 }
+  points.C = { x: 0.5, y: 0.5 }
   updateChart()
-}
-
-// Load a preset trial configuration
-const loadTrial = (trialType) => {
-  const trial = HARDCODED_TRIALS[trialType]
-  if (trial) {
-    points.A.x = roundToThreeDecimals(trial.arate)
-    points.A.y = roundToThreeDecimals(trial.aecon)
-    points.B.x = roundToThreeDecimals(trial.brate)
-    points.B.y = roundToThreeDecimals(trial.becon)
-    points.C.x = roundToThreeDecimals(trial.drate)
-    points.C.y = roundToThreeDecimals(trial.decon)
-    updateChart()
-  }
 }
 
 // Validate coordinate input
@@ -510,6 +587,11 @@ watch(params, () => {
   updateChart()
 }, { deep: true })
 
+// Watch for shift key state changes and update chart
+watch(isShiftPressed, () => {
+  updateChart()
+})
+
 // ===== LIFECYCLE HOOKS =====
 // Handle window resize
 const handleResize = () => {
@@ -518,11 +600,27 @@ const handleResize = () => {
   }
 }
 
+// Handle shift key press
+const handleKeyDown = (e) => {
+  if (e.key === 'Shift') {
+    isShiftPressed.value = true
+  }
+}
+
+// Handle shift key release
+const handleKeyUp = (e) => {
+  if (e.key === 'Shift') {
+    isShiftPressed.value = false
+  }
+}
+
 // Lifecycle
 onMounted(() => {
   nextTick(() => {
     initChart()
     window.addEventListener('resize', handleResize)
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
   })
 })
 
@@ -532,6 +630,8 @@ onUnmounted(() => {
     chartInstance.dispose()
   }
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('keyup', handleKeyUp)
 })
 </script>
 
@@ -561,6 +661,48 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
+.chart-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.chart-hint {
+  flex: 1;
+  font-size: 0.75rem;
+  color: #666;
+  text-align: center;
+  padding: 0.25rem;
+  background: #f9f9f9;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.chart-hint.shift-active {
+  background: #e6f3ff;
+  color: #0066cc;
+  font-weight: bold;
+  border: 1px solid #0066cc;
+}
+
+.chart-reset-button {
+  padding: 0.25rem 0.75rem;
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.chart-reset-button:hover {
+  background: #e0e0e0;
+  border-color: #999;
+}
+
 .chart {
   width: 100%;
   height: 0;
@@ -568,6 +710,12 @@ onUnmounted(() => {
   position: relative;
   border: 1px solid #ccc;
   flex: 1;
+  transition: all 0.2s ease;
+}
+
+.chart.shift-mode {
+  border-color: #0066cc;
+  box-shadow: 0 0 15px rgba(0, 102, 204, 0.3);
 }
 
 .chart > div {
@@ -705,6 +853,22 @@ onUnmounted(() => {
   font-size: 0.8rem;
 }
 
+.checkbox-row {
+  margin-top: 0.5rem;
+}
+
+.checkbox-row label {
+  min-width: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox-input {
+  cursor: pointer;
+}
+
 .number-input {
   flex: 1;
   padding: 0.4rem;
@@ -734,53 +898,6 @@ onUnmounted(() => {
 
 .problem-description {
   margin-bottom: 0.75rem;
-}
-
-.preset-trials {
-  margin-bottom: 1rem;
-}
-
-.preset-trials h4 {
-  margin: 0 0 0.5rem 0;
-  color: #333;
-  font-size: 0.9rem;
-  font-weight: normal;
-}
-
-.trial-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.trial-button {
-  flex: 1;
-  min-width: 100px;
-  padding: 0.5rem;
-  background: #f0f8ff;
-  border: 2px solid #ccc;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-.trial-button:hover {
-  background: #e6f3ff;
-  border-color: #0066cc;
-  transform: translateY(-1px);
-}
-
-.trial-name {
-  font-weight: bold;
-  font-size: 0.8rem;
-  color: #333;
-  margin-bottom: 0.2rem;
-}
-
-.trial-desc {
-  font-size: 0.7rem;
-  color: #666;
 }
 
 .option-cards {
