@@ -123,6 +123,19 @@
           <h3>Parameter Controls</h3>
           
           <div class="control-group">
+            <h4>Domain</h4>
+            <div class="input-row">
+              <label>Name:</label>
+              <input 
+                v-model="params.domain" 
+                type="text" 
+                class="number-input"
+                placeholder="e.g., Apartment Rental (or NA)"
+              />
+            </div>
+          </div>
+          
+          <div class="control-group">
             <h4>X-Axis (Horizontal)</h4>
             <div class="input-row">
               <label>Name:</label>
@@ -227,7 +240,7 @@
 
         <!-- Generated Output -->
         <div class="generated-output">
-          <h3>Problem</h3>
+          <h3>{{ params.domain && params.domain.toUpperCase() !== 'NA' ? params.domain + ' Problem' : 'Problem' }}</h3>
           
           <div class="problem-description">
             <div class="option-cards">
@@ -275,12 +288,13 @@ let chartInstance = null
 // Points data (0-1 range for chart coordinates)
 const points = reactive({
   A: { x: 0.25, y: 0.75 },
-  B: { x: 0.850, y: 0.25 },
+  B: { x: 0.75, y: 0.25 },
   C: { x: 0.5, y: 0.5 }
 })
 
 // Parameter controls for real-world transformation
 const params = reactive({
+  domain: '',
   xName: 'Square Footage',
   xUnit: 'sq. ft.',
   xMin: 300,
@@ -321,11 +335,20 @@ const transformedValues = computed(() => ({
 
 // ===== CHART CONFIGURATION =====
 const getChartOptions = () => ({
+  title: {
+    text: params.domain && params.domain.toUpperCase() !== 'NA' ? params.domain : '',
+    left: 'center',
+    top: '2%',
+    textStyle: {
+      fontSize: 16,
+      fontWeight: 'normal'
+    }
+  },
   grid: {
     left: '15%',
     right: '10%',
     bottom: '15%',
-    top: '10%'
+    top: params.domain && params.domain.toUpperCase() !== 'NA' ? '12%' : '10%'
   },
   xAxis: {
     type: 'value',
@@ -559,7 +582,7 @@ const updateChart = () => {
 // Reset points to initial positions
 const resetPoints = () => {
   points.A = { x: 0.25, y: 0.75 }
-  points.B = { x: 0.850, y: 0.25 }
+  points.B = { x: 0.750, y: 0.25 }
   points.C = { x: 0.5, y: 0.5 }
   updateChart()
 }
