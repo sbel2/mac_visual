@@ -363,7 +363,7 @@ const getChartOptions = () => {
       left: '15%',
       right: '10%',
       bottom: '18%',
-      top: params.domain && params.domain.toUpperCase() !== 'NA' ? '12%' : '10%'
+      top: '10%'
     },
     xAxis: {
       type: 'value',
@@ -757,6 +757,11 @@ const handleResize = () => {
 // Handle shift key press
 const handleKeyDown = (e) => {
   if (e.key === 'Shift') {
+    // Don't activate shift mode if user is typing in an input field
+    const activeElement = document.activeElement
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      return
+    }
     isShiftPressed.value = true
   }
 }
