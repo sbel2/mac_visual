@@ -391,7 +391,7 @@ const getChartOptions = () => {
       }
     },
     legend: {
-      data: ['Inferior', 'Attraction A', 'Comp/Sim', 'Attraction B', 'Superior'],
+      data: ['Inferior', 'Attraction A', 'Attraction B', 'Comp/Sim', 'Superior'],
       bottom: '1%',
       itemWidth: 15,
       itemHeight: 10,
@@ -439,6 +439,7 @@ const getChartOptions = () => {
       {
         name: 'Inferior',
         type: 'custom',
+        color: 'rgb(144, 238, 144)', // lightgreen - solid color for legend
         renderItem: (params, api) => {
           const x0 = api.coord([0, 0])
           const x1 = api.coord([canonicalA.x, canonicalB.y])
@@ -462,6 +463,7 @@ const getChartOptions = () => {
       {
         name: 'Attraction A',
         type: 'custom',
+        color: 'rgb(135, 206, 250)', // light sky blue - solid color for legend
         renderItem: (params, api) => {
           const x0 = api.coord([0, canonicalB.y])
           const x1 = api.coord([canonicalA.x, canonicalA.y])
@@ -474,7 +476,7 @@ const getChartOptions = () => {
               height: x0[1] - x1[1]
             },
             style: {
-              fill: 'rgba(173, 216, 230, 0.5)' // lightblue
+              fill: 'rgba(135, 206, 250, 0.5)' // light sky blue
             },
             z: -2
           }
@@ -485,6 +487,7 @@ const getChartOptions = () => {
       {
         name: 'Comp/Sim',
         type: 'custom',
+        color: 'rgb(255, 255, 0)', // yellow - solid color for legend
         renderItem: (params, api) => {
           const x0 = api.coord([canonicalA.x, canonicalB.y])
           const x1 = api.coord([canonicalB.x, canonicalA.y])
@@ -508,6 +511,7 @@ const getChartOptions = () => {
       {
         name: 'Attraction B',
         type: 'custom',
+        color: 'rgb(70, 130, 180)', // steel blue - solid color for legend
         renderItem: (params, api) => {
           const x0 = api.coord([canonicalA.x, 0])
           const x1 = api.coord([canonicalB.x, canonicalB.y])
@@ -520,7 +524,7 @@ const getChartOptions = () => {
               height: x0[1] - x1[1]
             },
             style: {
-              fill: 'rgba(135, 206, 235, 0.5)' // skyblue
+              fill: 'rgba(70, 130, 180, 0.5)' // steel blue
             },
             z: -2
           }
@@ -531,6 +535,7 @@ const getChartOptions = () => {
       {
         name: 'Superior',
         type: 'custom',
+        color: 'rgb(250, 128, 114)', // salmon - solid color for legend
         renderItem: (params, api) => {
           const x0 = api.coord([canonicalB.x, canonicalA.y])
           const x1 = api.coord([1, 1])
