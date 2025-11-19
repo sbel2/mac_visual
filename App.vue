@@ -62,7 +62,7 @@
               <input 
                 v-model.number="params.xMin" 
                 type="number" 
-                step="1"
+                :step="params.xDecimals > 0 ? Math.pow(10, -params.xDecimals) : 1"
                 class="number-input"
                 @keydown="handleInputKeydown"
               />
@@ -72,9 +72,22 @@
               <input 
                 v-model.number="params.xMax" 
                 type="number" 
+                :step="params.xDecimals > 0 ? Math.pow(10, -params.xDecimals) : 1"
+                class="number-input"
+                @keydown="handleInputKeydown"
+              />
+            </div>
+            <div class="input-row">
+              <label>Decimals:</label>
+              <input 
+                v-model.number="params.xDecimals" 
+                type="number" 
+                min="0"
+                max="5"
                 step="1"
                 class="number-input"
                 @keydown="handleInputKeydown"
+                title="Number of decimal places (0-5)"
               />
             </div>
             <div class="input-row checkbox-row">
@@ -118,7 +131,7 @@
               <input 
                 v-model.number="params.yMin" 
                 type="number" 
-                step="1"
+                :step="params.yDecimals > 0 ? Math.pow(10, -params.yDecimals) : 1"
                 class="number-input"
                 @keydown="handleInputKeydown"
               />
@@ -128,9 +141,22 @@
               <input 
                 v-model.number="params.yMax" 
                 type="number" 
+                :step="params.yDecimals > 0 ? Math.pow(10, -params.yDecimals) : 1"
+                class="number-input"
+                @keydown="handleInputKeydown"
+              />
+            </div>
+            <div class="input-row">
+              <label>Decimals:</label>
+              <input 
+                v-model.number="params.yDecimals" 
+                type="number" 
+                min="0"
+                max="5"
                 step="1"
                 class="number-input"
                 @keydown="handleInputKeydown"
+                title="Number of decimal places (0-5)"
               />
             </div>
             <div class="input-row checkbox-row">
@@ -152,21 +178,7 @@
 
         <!-- Generated Output -->
         <div class="generated-output">
-          <div class="problem-header">
-            <h3>{{ params.domain && params.domain.toUpperCase() !== 'NA' ? params.domain + ' Problem' : 'Problem' }}</h3>
-            <div class="decimals-control">
-              <label>Decimals:</label>
-              <input 
-                v-model.number="params.decimals" 
-                type="number" 
-                min="0"
-                max="5"
-                step="1"
-                class="decimals-input"
-                title="Number of decimal places"
-              />
-            </div>
-          </div>
+          <h3>{{ params.domain && params.domain.toUpperCase() !== 'NA' ? params.domain + ' Problem' : 'Problem' }}</h3>
           
           <div class="problem-description">
             <div class="option-cards">
@@ -210,10 +222,10 @@
                     type="number" 
                     min="0" 
                     max="1" 
-                    step="0.001"
+                    step="0.01"
                     class="coord-input"
                     @blur="validateCoordinate('A', 'x', $event)"
-                    placeholder="0.000"
+                    placeholder="0.00"
                   />
                 </div>
                 <div class="input-group">
@@ -223,10 +235,10 @@
                     type="number" 
                     min="0" 
                     max="1" 
-                    step="0.001"
+                    step="0.01"
                     class="coord-input"
                     @blur="validateCoordinate('A', 'y', $event)"
-                    placeholder="0.000"
+                    placeholder="0.00"
                   />
                 </div>
               </div>
@@ -242,10 +254,10 @@
                     type="number" 
                     min="0" 
                     max="1" 
-                    step="0.001"
+                    step="0.01"
                     class="coord-input"
                     @blur="validateCoordinate('B', 'x', $event)"
-                    placeholder="0.000"
+                    placeholder="0.00"
                   />
                 </div>
                 <div class="input-group">
@@ -255,10 +267,10 @@
                     type="number" 
                     min="0" 
                     max="1" 
-                    step="0.001"
+                    step="0.01"
                     class="coord-input"
                     @blur="validateCoordinate('B', 'y', $event)"
-                    placeholder="0.000"
+                    placeholder="0.00"
                   />
                 </div>
               </div>
@@ -274,10 +286,10 @@
                     type="number" 
                     min="0" 
                     max="1" 
-                    step="0.001"
+                    step="0.01"
                     class="coord-input"
                     @blur="validateCoordinate('C', 'x', $event)"
-                    placeholder="0.000"
+                    placeholder="0.00"
                   />
                 </div>
                 <div class="input-group">
@@ -287,10 +299,10 @@
                     type="number" 
                     min="0" 
                     max="1" 
-                    step="0.001"
+                    step="0.01"
                     class="coord-input"
                     @blur="validateCoordinate('C', 'y', $event)"
-                    placeholder="0.000"
+                    placeholder="0.00"
                   />
                 </div>
               </div>
@@ -322,17 +334,18 @@ const points = reactive({
 // Parameter controls for real-world transformation
 const params = reactive({
   domain: '',
-  decimals: 0,
   xName: 'Square Footage',
   xUnit: 'sq. ft.',
   xMin: 300,
   xMax: 2500,
   xInverse: false,
+  xDecimals: 0,
   yName: 'Price',
   yUnit: '$/month',
   yMin: 500,
   yMax: 4000,
-  yInverse: true
+  yInverse: true,
+  yDecimals: 0
 })
 
 // ===== UTILITY FUNCTIONS =====
@@ -348,16 +361,16 @@ function roundToThreeDecimals(value) {
 // ===== COMPUTED PROPERTIES =====
 const transformedValues = computed(() => ({
   A: {
-    x: transformValue(points.A.x, params.xMin, params.xMax, params.xInverse, params.decimals),
-    y: transformValue(points.A.y, params.yMin, params.yMax, params.yInverse, params.decimals)
+    x: transformValue(points.A.x, params.xMin, params.xMax, params.xInverse, params.xDecimals),
+    y: transformValue(points.A.y, params.yMin, params.yMax, params.yInverse, params.yDecimals)
   },
   B: {
-    x: transformValue(points.B.x, params.xMin, params.xMax, params.xInverse, params.decimals),
-    y: transformValue(points.B.y, params.yMin, params.yMax, params.yInverse, params.decimals)
+    x: transformValue(points.B.x, params.xMin, params.xMax, params.xInverse, params.xDecimals),
+    y: transformValue(points.B.y, params.yMin, params.yMax, params.yInverse, params.yDecimals)
   },
   C: {
-    x: transformValue(points.C.x, params.xMin, params.xMax, params.xInverse, params.decimals),
-    y: transformValue(points.C.y, params.yMin, params.yMax, params.yInverse, params.decimals)
+    x: transformValue(points.C.x, params.xMin, params.xMax, params.xInverse, params.xDecimals),
+    y: transformValue(points.C.y, params.yMin, params.yMax, params.yInverse, params.yDecimals)
   }
 }))
 
@@ -758,6 +771,37 @@ const validateCoordinate = (point, axis, event) => {
   event.target.value = value.toFixed(3)
 }
 
+// ===== LOCAL STORAGE =====
+// Save settings to localStorage
+const saveToLocalStorage = () => {
+  try {
+    localStorage.setItem('mac_visual_points', JSON.stringify(points))
+    localStorage.setItem('mac_visual_params', JSON.stringify(params))
+  } catch (e) {
+    console.error('Failed to save to localStorage:', e)
+  }
+}
+
+// Load settings from localStorage
+const loadFromLocalStorage = () => {
+  try {
+    const savedPoints = localStorage.getItem('mac_visual_points')
+    const savedParams = localStorage.getItem('mac_visual_params')
+    
+    if (savedPoints) {
+      const parsed = JSON.parse(savedPoints)
+      Object.assign(points, parsed)
+    }
+    
+    if (savedParams) {
+      const parsed = JSON.parse(savedParams)
+      Object.assign(params, parsed)
+    }
+  } catch (e) {
+    console.error('Failed to load from localStorage:', e)
+  }
+}
+
 // Handle keyboard navigation in settings inputs
 const handleInputKeydown = (event) => {
   // For checkboxes, Space toggles and Enter moves to next field
@@ -802,11 +846,13 @@ const handleInputKeydown = (event) => {
 // Watch for changes in points and update chart
 watch(points, () => {
   updateChart()
+  saveToLocalStorage()
 }, { deep: true })
 
 // Watch for changes in params and update chart
 watch(params, () => {
   updateChart()
+  saveToLocalStorage()
 }, { deep: true })
 
 // Watch for shift key state changes and update chart
@@ -843,6 +889,7 @@ const handleKeyUp = (e) => {
 
 // Lifecycle
 onMounted(() => {
+  loadFromLocalStorage()
   nextTick(() => {
     initChart()
     window.addEventListener('resize', handleResize)
