@@ -30,6 +30,7 @@
                 type="text" 
                 class="number-input"
                 placeholder="e.g., Apartment Rental (or NA)"
+                @keydown="handleInputKeydown"
               />
             </div>
           </div>
@@ -43,6 +44,7 @@
                 type="text" 
                 class="number-input"
                 placeholder="e.g., Square Footage"
+                @keydown="handleInputKeydown"
               />
             </div>
             <div class="input-row">
@@ -52,6 +54,7 @@
                 type="text" 
                 class="number-input"
                 placeholder="e.g., sq. ft."
+                @keydown="handleInputKeydown"
               />
             </div>
             <div class="input-row">
@@ -61,6 +64,7 @@
                 type="number" 
                 step="1"
                 class="number-input"
+                @keydown="handleInputKeydown"
               />
             </div>
             <div class="input-row">
@@ -70,6 +74,7 @@
                 type="number" 
                 step="1"
                 class="number-input"
+                @keydown="handleInputKeydown"
               />
             </div>
             <div class="input-row checkbox-row">
@@ -78,6 +83,8 @@
                   v-model="params.xInverse" 
                   type="checkbox"
                   class="checkbox-input"
+                  @keydown="handleInputKeydown"
+                  title="Press Space to toggle"
                 />
                 Inverse (lower is better)
               </label>
@@ -93,6 +100,7 @@
                 type="text" 
                 class="number-input"
                 placeholder="e.g., Price"
+                @keydown="handleInputKeydown"
               />
             </div>
             <div class="input-row">
@@ -102,6 +110,7 @@
                 type="text" 
                 class="number-input"
                 placeholder="e.g., $/month"
+                @keydown="handleInputKeydown"
               />
             </div>
             <div class="input-row">
@@ -111,6 +120,7 @@
                 type="number" 
                 step="1"
                 class="number-input"
+                @keydown="handleInputKeydown"
               />
             </div>
             <div class="input-row">
@@ -120,6 +130,7 @@
                 type="number" 
                 step="1"
                 class="number-input"
+                @keydown="handleInputKeydown"
               />
             </div>
             <div class="input-row checkbox-row">
@@ -128,6 +139,8 @@
                   v-model="params.yInverse" 
                   type="checkbox"
                   class="checkbox-input"
+                  @keydown="handleInputKeydown"
+                  title="Press Space to toggle"
                 />
                 Inverse (lower is better)
               </label>
@@ -139,7 +152,21 @@
 
         <!-- Generated Output -->
         <div class="generated-output">
-          <h3>{{ params.domain && params.domain.toUpperCase() !== 'NA' ? params.domain + ' Problem' : 'Problem' }}</h3>
+          <div class="problem-header">
+            <h3>{{ params.domain && params.domain.toUpperCase() !== 'NA' ? params.domain + ' Problem' : 'Problem' }}</h3>
+            <div class="decimals-control">
+              <label>Decimals:</label>
+              <input 
+                v-model.number="params.decimals" 
+                type="number" 
+                min="0"
+                max="5"
+                step="1"
+                class="decimals-input"
+                title="Number of decimal places"
+              />
+            </div>
+          </div>
           
           <div class="problem-description">
             <div class="option-cards">
@@ -295,6 +322,7 @@ const points = reactive({
 // Parameter controls for real-world transformation
 const params = reactive({
   domain: '',
+  decimals: 0,
   xName: 'Square Footage',
   xUnit: 'sq. ft.',
   xMin: 300,
@@ -308,9 +336,9 @@ const params = reactive({
 })
 
 // ===== UTILITY FUNCTIONS =====
-function transformValue(q, min, max, inverse) {
+function transformValue(q, min, max, inverse, decimals = 0) {
   const value = inverse ? (1 - q) * (max - min) + min : q * (max - min) + min
-  return Math.round(value)
+  return decimals > 0 ? value.toFixed(decimals) : Math.round(value)
 }
 
 function roundToThreeDecimals(value) {
@@ -320,16 +348,16 @@ function roundToThreeDecimals(value) {
 // ===== COMPUTED PROPERTIES =====
 const transformedValues = computed(() => ({
   A: {
-    x: transformValue(points.A.x, params.xMin, params.xMax, params.xInverse),
-    y: transformValue(points.A.y, params.yMin, params.yMax, params.yInverse)
+    x: transformValue(points.A.x, params.xMin, params.xMax, params.xInverse, params.decimals),
+    y: transformValue(points.A.y, params.yMin, params.yMax, params.yInverse, params.decimals)
   },
   B: {
-    x: transformValue(points.B.x, params.xMin, params.xMax, params.xInverse),
-    y: transformValue(points.B.y, params.yMin, params.yMax, params.yInverse)
+    x: transformValue(points.B.x, params.xMin, params.xMax, params.xInverse, params.decimals),
+    y: transformValue(points.B.y, params.yMin, params.yMax, params.yInverse, params.decimals)
   },
   C: {
-    x: transformValue(points.C.x, params.xMin, params.xMax, params.xInverse),
-    y: transformValue(points.C.y, params.yMin, params.yMax, params.yInverse)
+    x: transformValue(points.C.x, params.xMin, params.xMax, params.xInverse, params.decimals),
+    y: transformValue(points.C.y, params.yMin, params.yMax, params.yInverse, params.decimals)
   }
 }))
 
@@ -730,6 +758,46 @@ const validateCoordinate = (point, axis, event) => {
   event.target.value = value.toFixed(3)
 }
 
+// Handle keyboard navigation in settings inputs
+const handleInputKeydown = (event) => {
+  // For checkboxes, Space toggles and Enter moves to next field
+  if (event.target.type === 'checkbox') {
+    if (event.key === 'Enter' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      const inputs = Array.from(document.querySelectorAll('.parameter-controls .number-input, .parameter-controls .checkbox-input'))
+      const currentIndex = inputs.indexOf(event.target)
+      if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
+        inputs[currentIndex + 1].focus()
+      }
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      const inputs = Array.from(document.querySelectorAll('.parameter-controls .number-input, .parameter-controls .checkbox-input'))
+      const currentIndex = inputs.indexOf(event.target)
+      if (currentIndex > 0) {
+        inputs[currentIndex - 1].focus()
+      }
+    }
+    // Space key is handled natively by checkbox - no need to prevent default
+  } else {
+    // For text/number inputs
+    if (event.key === 'Enter' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      const inputs = Array.from(document.querySelectorAll('.parameter-controls .number-input, .parameter-controls .checkbox-input'))
+      const currentIndex = inputs.indexOf(event.target)
+      if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
+        inputs[currentIndex + 1].focus()
+      }
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      const inputs = Array.from(document.querySelectorAll('.parameter-controls .number-input, .parameter-controls .checkbox-input'))
+      const currentIndex = inputs.indexOf(event.target)
+      if (currentIndex > 0) {
+        inputs[currentIndex - 1].focus()
+      }
+    }
+  }
+}
+
 // ===== WATCHERS =====
 // Watch for changes in points and update chart
 watch(points, () => {
@@ -985,6 +1053,45 @@ onUnmounted(() => {
   padding-bottom: 0.5rem;
 }
 
+.problem-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+
+.problem-header h3 {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.decimals-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.decimals-control label {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.decimals-input {
+  width: 50px;
+  padding: 0.25rem;
+  border: 1px solid #ccc;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.decimals-input:focus {
+  outline: none;
+  border-color: #666;
+}
+
 .control-group {
   margin-bottom: 0.75rem;
 }
@@ -1023,6 +1130,19 @@ onUnmounted(() => {
 
 .checkbox-input {
   cursor: pointer;
+}
+
+.checkbox-input:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+.checkbox-row label:has(.checkbox-input:focus)::after {
+  content: ' (Press Space to toggle)';
+  color: #999;
+  font-size: 0.75rem;
+  font-style: italic;
+  margin-left: 0.5rem;
 }
 
 .number-input {
