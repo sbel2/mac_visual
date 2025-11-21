@@ -350,8 +350,19 @@ const params = reactive({
 
 // ===== UTILITY FUNCTIONS =====
 function transformValue(q, min, max, inverse, decimals = 0) {
-  const value = inverse ? (1 - q) * (max - min) + min : q * (max - min) + min
-  return decimals > 0 ? value.toFixed(decimals) : Math.round(value)
+  // Ensure all inputs are numbers
+  const numQ = typeof q === 'number' ? q : parseFloat(q) || 0
+  const numMin = typeof min === 'number' ? min : parseFloat(min) || 0
+  const numMax = typeof max === 'number' ? max : parseFloat(max) || 0
+  const numDecimals = typeof decimals === 'number' ? decimals : parseInt(decimals) || 0
+  
+  const value = inverse ? (1 - numQ) * (numMax - numMin) + numMin : numQ * (numMax - numMin) + numMin
+  
+  // Always return a number, not a string
+  if (numDecimals > 0) {
+    return parseFloat(value.toFixed(numDecimals))
+  }
+  return Math.round(value)
 }
 
 function roundToThreeDecimals(value) {
@@ -359,20 +370,38 @@ function roundToThreeDecimals(value) {
 }
 
 // ===== COMPUTED PROPERTIES =====
-const transformedValues = computed(() => ({
-  A: {
-    x: transformValue(points.A.x, params.xMin, params.xMax, params.xInverse, params.xDecimals),
-    y: transformValue(points.A.y, params.yMin, params.yMax, params.yInverse, params.yDecimals)
-  },
-  B: {
-    x: transformValue(points.B.x, params.xMin, params.xMax, params.xInverse, params.xDecimals),
-    y: transformValue(points.B.y, params.yMin, params.yMax, params.yInverse, params.yDecimals)
-  },
-  C: {
-    x: transformValue(points.C.x, params.xMin, params.xMax, params.xInverse, params.xDecimals),
-    y: transformValue(points.C.y, params.yMin, params.yMax, params.yInverse, params.yDecimals)
+const transformedValues = computed(() => {
+  // Ensure all point values are numbers
+  const safePoints = {
+    A: {
+      x: typeof points.A.x === 'number' ? points.A.x : parseFloat(points.A.x) || 0,
+      y: typeof points.A.y === 'number' ? points.A.y : parseFloat(points.A.y) || 0
+    },
+    B: {
+      x: typeof points.B.x === 'number' ? points.B.x : parseFloat(points.B.x) || 0,
+      y: typeof points.B.y === 'number' ? points.B.y : parseFloat(points.B.y) || 0
+    },
+    C: {
+      x: typeof points.C.x === 'number' ? points.C.x : parseFloat(points.C.x) || 0,
+      y: typeof points.C.y === 'number' ? points.C.y : parseFloat(points.C.y) || 0
+    }
   }
-}))
+  
+  return {
+    A: {
+      x: transformValue(safePoints.A.x, params.xMin, params.xMax, params.xInverse, params.xDecimals),
+      y: transformValue(safePoints.A.y, params.yMin, params.yMax, params.yInverse, params.yDecimals)
+    },
+    B: {
+      x: transformValue(safePoints.B.x, params.xMin, params.xMax, params.xInverse, params.xDecimals),
+      y: transformValue(safePoints.B.y, params.yMin, params.yMax, params.yInverse, params.yDecimals)
+    },
+    C: {
+      x: transformValue(safePoints.C.x, params.xMin, params.xMax, params.xInverse, params.xDecimals),
+      y: transformValue(safePoints.C.y, params.yMin, params.yMax, params.yInverse, params.yDecimals)
+    }
+  }
+})
 
 // ===== CHART CONFIGURATION =====
 const getChartOptions = () => {
@@ -417,7 +446,10 @@ const getChartOptions = () => {
         fontSize: 12
       },
       axisLabel: {
-        formatter: (value) => value.toFixed(1)
+        formatter: (value) => {
+          const numValue = typeof value === 'number' ? value : parseFloat(value) || 0
+          return numValue.toFixed(1)
+        }
       }
     },
     yAxis: {
@@ -431,7 +463,10 @@ const getChartOptions = () => {
         fontSize: 12
       },
       axisLabel: {
-        formatter: (value) => value.toFixed(1)
+        formatter: (value) => {
+          const numValue = typeof value === 'number' ? value : parseFloat(value) || 0
+          return numValue.toFixed(1)
+        }
       }
     },
     series: [
@@ -600,7 +635,9 @@ const getChartOptions = () => {
     formatter: (p) => {
       if (p.seriesType === 'scatter') {
         const point = p.data
-        return `${point.name}<br/>${params.xUnit}: ${point.value[0].toFixed(3)}<br/>${params.yUnit}: ${point.value[1].toFixed(3)}`
+        const xVal = typeof point.value[0] === 'number' ? point.value[0] : parseFloat(point.value[0]) || 0
+        const yVal = typeof point.value[1] === 'number' ? point.value[1] : parseFloat(point.value[1]) || 0
+        return `${point.name}<br/>${params.xUnit}: ${xVal.toFixed(3)}<br/>${params.yUnit}: ${yVal.toFixed(3)}`
       }
       return ''
     }
@@ -773,7 +810,8 @@ const validateCoordinate = (point, axis, event) => {
   value = Math.max(0, Math.min(1, value))
   value = roundToThreeDecimals(value)
   points[point][axis] = value
-  event.target.value = value.toFixed(3)
+  const numValue = typeof value === 'number' ? value : parseFloat(value) || 0
+  event.target.value = numValue.toFixed(3)
 }
 
 // ===== LOCAL STORAGE =====
@@ -795,12 +833,37 @@ const loadFromLocalStorage = () => {
     
     if (savedPoints) {
       const parsed = JSON.parse(savedPoints)
-      Object.assign(points, parsed)
+      // Validate and ensure all point values are numbers
+      if (parsed.A) {
+        points.A.x = typeof parsed.A.x === 'number' ? parsed.A.x : parseFloat(parsed.A.x) || 0.25
+        points.A.y = typeof parsed.A.y === 'number' ? parsed.A.y : parseFloat(parsed.A.y) || 0.75
+      }
+      if (parsed.B) {
+        points.B.x = typeof parsed.B.x === 'number' ? parsed.B.x : parseFloat(parsed.B.x) || 0.75
+        points.B.y = typeof parsed.B.y === 'number' ? parsed.B.y : parseFloat(parsed.B.y) || 0.25
+      }
+      if (parsed.C) {
+        points.C.x = typeof parsed.C.x === 'number' ? parsed.C.x : parseFloat(parsed.C.x) || 0.5
+        points.C.y = typeof parsed.C.y === 'number' ? parsed.C.y : parseFloat(parsed.C.y) || 0.5
+      }
     }
     
     if (savedParams) {
       const parsed = JSON.parse(savedParams)
-      Object.assign(params, parsed)
+      // Validate and ensure all param values are correct types
+      if (parsed.domain !== undefined) params.domain = String(parsed.domain || '')
+      if (parsed.xName !== undefined) params.xName = String(parsed.xName || 'Square Footage')
+      if (parsed.xUnit !== undefined) params.xUnit = String(parsed.xUnit || 'sq. ft.')
+      if (parsed.xMin !== undefined) params.xMin = typeof parsed.xMin === 'number' ? parsed.xMin : parseFloat(parsed.xMin) || 300
+      if (parsed.xMax !== undefined) params.xMax = typeof parsed.xMax === 'number' ? parsed.xMax : parseFloat(parsed.xMax) || 2500
+      if (parsed.xInverse !== undefined) params.xInverse = Boolean(parsed.xInverse)
+      if (parsed.xDecimals !== undefined) params.xDecimals = typeof parsed.xDecimals === 'number' ? parsed.xDecimals : parseInt(parsed.xDecimals) || 0
+      if (parsed.yName !== undefined) params.yName = String(parsed.yName || 'Price')
+      if (parsed.yUnit !== undefined) params.yUnit = String(parsed.yUnit || '$/month')
+      if (parsed.yMin !== undefined) params.yMin = typeof parsed.yMin === 'number' ? parsed.yMin : parseFloat(parsed.yMin) || 500
+      if (parsed.yMax !== undefined) params.yMax = typeof parsed.yMax === 'number' ? parsed.yMax : parseFloat(parsed.yMax) || 4000
+      if (parsed.yInverse !== undefined) params.yInverse = Boolean(parsed.yInverse)
+      if (parsed.yDecimals !== undefined) params.yDecimals = typeof parsed.yDecimals === 'number' ? parsed.yDecimals : parseInt(parsed.yDecimals) || 0
     }
   } catch (e) {
     console.error('Failed to load from localStorage:', e)
