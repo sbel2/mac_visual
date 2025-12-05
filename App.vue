@@ -21,6 +21,12 @@
         <div v-if="showSettings" class="parameter-controls">
           <h3>Parameter Controls</h3>
           
+          <div class="preset-buttons">
+            <button @click="loadSmartphonePreset" class="preset-button">
+              📱 Load Smartphone Preset
+            </button>
+          </div>
+          
           <div class="control-group">
             <h4>Domain</h4>
             <div class="input-row">
@@ -793,6 +799,35 @@ const updateChart = () => {
 }
 
 // ===== USER INTERACTION FUNCTIONS =====
+// Load smartphone preset
+const loadSmartphonePreset = () => {
+  // Set domain
+  params.domain = 'Smartphone'
+  
+  // Set X-axis (Price)
+  params.xName = 'Price'
+  params.xUnit = '$'
+  params.xMin = 450
+  params.xMax = 1050
+  params.xDecimals = 0
+  params.xInverse = true
+  
+  // Set Y-axis (Battery life)
+  params.yName = 'Battery life'
+  params.yUnit = 'hour'
+  params.yMin = 4
+  params.yMax = 11
+  params.yDecimals = 0
+  params.yInverse = false
+  
+  // Reset points to default
+  points.A = { x: 0.25, y: 0.75 }
+  points.B = { x: 0.75, y: 0.25 }
+  points.C = { x: 0.5, y: 0.5 }
+  
+  updateChart()
+}
+
 // Reset points to initial positions
 const resetPoints = () => {
   points.A = { x: 0.25, y: 0.75 }
@@ -1285,6 +1320,35 @@ onUnmounted(() => {
 
 .reset-button:hover {
   background: #d0d0d0;
+}
+
+.preset-buttons {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.preset-button {
+  width: 100%;
+  padding: 0.6rem;
+  background: #4CAF50;
+  color: white;
+  border: 1px solid #45a049;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.preset-button:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.preset-button:active {
+  transform: translateY(0);
 }
 
 .problem-description {
