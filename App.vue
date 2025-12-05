@@ -4,7 +4,7 @@
       <!-- Left Column: Interactive Chart -->
       <div class="chart-container">
         <div class="chart-header">
-          <div class="chart-hint" :class="{ 'shift-active': isShiftPressed }">{{ isShiftPressed ? '🔄 Triangle Move Mode Active' : 'Tip: Hold Shift while dragging to move the entire triangle' }}</div>
+          <div class="chart-hint" :class="{ 'shift-active': isShiftPressed }">{{ isShiftPressed ? '🔄 Triangle Move Mode Active' : 'Tip: Hold Shift + Space to move the entire triangle' }}</div>
           <button @click="resetPoints" class="chart-reset-button">Reset</button>
         </div>
         <div ref="chartRef" class="chart" :class="{ 'shift-mode': isShiftPressed }"></div>
@@ -415,7 +415,105 @@ const getChartOptions = () => {
   const canonicalA = { x: 0.25, y: 0.75 }
   const canonicalB = { x: 0.75, y: 0.25 }
   
+  // Current points (0-1) for dynamic regions
+  const Ax = typeof points.A.x === 'number' ? points.A.x : parseFloat(points.A.x) || 0
+  const Ay = typeof points.A.y === 'number' ? points.A.y : parseFloat(points.A.y) || 0
+  const Bx = typeof points.B.x === 'number' ? points.B.x : parseFloat(points.B.x) || 0
+  const By = typeof points.B.y === 'number' ? points.B.y : parseFloat(points.B.y) || 0
+
+  // Helper to clip within [0,1]
+  const clip01 = (v) => Math.max(0, Math.min(1, v))
+  const x0 = 0, x1 = 1, y0 = 0, y1 = 1
+
+  // Build markArea data rectangles only when Ax < Bx and Ay > By
+  const dominanceCondition = Ax < Bx && Ay > By
+
+  // Each region is [[{xAxis, yAxis}, {xAxis, yAxis}]]
+  const regionRects = []
+  if (dominanceCondition) {
+    const ax = clip01(Ax), ay = clip01(Ay), bx = clip01(Bx), by = clip01(By)
+    // Compute rectangle that places A at (25%,75%) and B at (75%,25%)
+    // Lx = 2*(Bx - Ax), Ly = 2*(Ay - By)
+    const Lx = 2 * (bx - ax)
+    const Ly = 2 * (ay - by)
+    // Rectangle bounds from A:
+    // Ax = Rx0 + 0.25*Lx => Rx0 = Ax - 0.25*Lx, Rx1 = Ax + 0.75*Lx
+    // Ay = Ry0 + 0.75*Ly => Ry0 = Ay - 0.75*Ly, Ry1 = Ay + 0.25*Ly
+    let Rx0 = ax - 0.25 * Lx
+    let Rx1 = ax + 0.75 * Lx
+    let Ry0 = ay - 0.75 * Ly
+    let Ry1 = ay + 0.25 * Ly
+    // Clip to chart bounds [0,1]
+    Rx0 = clip01(Rx0)
+    Rx1 = clip01(Rx1)
+    Ry0 = clip01(Ry0)
+    Ry1 = clip01(Ry1)
+    // Ensure ordering
+    if (Rx1 < Rx0) [Rx0, Rx1] = [Rx1, Rx0]
+    if (Ry1 < Ry0) [Ry0, Ry1] = [Ry1, Ry0]
+
+    // Also ensure internal split lines lie within the rectangle
+    const vxA = Math.max(Rx0, Math.min(ax, Rx1))
+    const vxB = Math.max(Rx0, Math.min(bx, Rx1))
+    const vyA = Math.max(Ry0, Math.min(ay, Ry1))
+    const vyB = Math.max(Ry0, Math.min(by, Ry1))
+
+    // Attraction Region A: x [Rx0, Ax], y [Ry0, Ay]
+    if (vxA > Rx0 && vyA > Ry0) {
+      regionRects.push({
+        name: 'Attraction Region A',
+        color: 'rgba(173, 216, 230, 0.5)', // lightblue
+        coords: [[{ xAxis: Rx0, yAxis: Ry0 }, { xAxis: vxA, yAxis: vyA }]]
+      })
+    }
+
+    // Attraction Region B: x [Ax, Bx], y [Ry0, By]
+    const bXlow = Math.min(vxA, vxB), bXhigh = Math.max(vxA, vxB)
+    const bYlow = Math.min(Ry0, vyB), bYhigh = Math.max(Ry0, vyB)
+    if (bXhigh > bXlow && bYhigh > bYlow) {
+      regionRects.push({
+        name: 'Attraction Region B',
+        color: 'rgba(135, 206, 235, 0.5)', // skyblue
+        coords: [[{ xAxis: bXlow, yAxis: bYlow }, { xAxis: bXhigh, yAxis: bYhigh }]]
+      })
+    }
+
+    // Comp/Sim (2-point efficient frontier): x [Ax, Bx], y [By, Ay]
+    const cYlow = Math.min(vyB, vyA), cYhigh = Math.max(vyB, vyA)
+    if (bXhigh > bXlow && cYhigh > cYlow) {
+      regionRects.push({
+        name: 'Comp/Sim (2-point efficient frontier)',
+        color: 'rgba(255, 255, 0, 0.5)', // yellow
+        coords: [[{ xAxis: bXlow, yAxis: cYlow }, { xAxis: bXhigh, yAxis: cYhigh }]]
+      })
+    }
+
+    // Inferior Decoys: x [Rx0, Ax], y [Ry0, By]
+    const iYlow = Math.min(Ry0, vyB), iYhigh = Math.max(Ry0, vyB)
+    if (vxA > Rx0 && iYhigh > iYlow) {
+      regionRects.push({
+        name: 'Inferior Decoys',
+        color: 'rgba(144, 238, 144, 0.5)', // lightgreen
+        coords: [[{ xAxis: Rx0, yAxis: iYlow }, { xAxis: vxA, yAxis: iYhigh }]]
+      })
+    }
+
+    // Superior Decoys: x [Bx, Rx1], y [Ay, Ry1]
+    const sXlow = Math.min(vxB, Rx1), sXhigh = Math.max(vxB, Rx1)
+    const sYlow = Math.min(vyA, Ry1), sYhigh = Math.max(vyA, Ry1)
+    if (sXhigh > sXlow && sYhigh > sYlow) {
+      regionRects.push({
+        name: 'Superior Decoys',
+        color: 'rgba(250, 128, 114, 0.5)', // salmon
+        coords: [[{ xAxis: sXlow, yAxis: sYlow }, { xAxis: sXhigh, yAxis: sYhigh }]]
+      })
+    }
+  }
+
   return {
+    animation: true,
+    animationDurationUpdate: 250,
+    animationEasingUpdate: 'cubicOut',
     title: {
       text: params.domain && params.domain.toUpperCase() !== 'NA' ? params.domain : '',
       left: 'center',
@@ -426,14 +524,14 @@ const getChartOptions = () => {
       }
     },
     legend: {
-      data: ['Inferior', 'Attraction A', 'Attraction B', 'Comp/Sim', 'Superior'],
-      bottom: '1%',
-      itemWidth: 15,
-      itemHeight: 10,
-      textStyle: {
-        fontSize: 9
-      },
-      itemGap: 8
+      show: true,
+      bottom: '5%',
+      icon: 'rect',
+      itemWidth: 18,
+      itemHeight: 12,
+      selectedMode: false,
+      textStyle: { fontSize: 12, color: '#333' },
+      data: ['Inferior', 'Attraction A', 'Attraction B', 'Comp/Sim', 'Superior']
     },
     grid: {
       left: '15%',
@@ -476,128 +574,68 @@ const getChartOptions = () => {
       }
     },
     series: [
-      // Background regions (dominance buckets)
-      {
-        name: 'Inferior',
-        type: 'custom',
-        color: 'rgb(144, 238, 144)', // lightgreen - solid color for legend
-        renderItem: (params, api) => {
-          const x0 = api.coord([0, 0])
-          const x1 = api.coord([canonicalA.x, canonicalB.y])
-          return {
-            type: 'rect',
-            shape: {
-              x: x0[0],
-              y: x1[1],
-              width: x1[0] - x0[0],
-              height: x0[1] - x1[1]
-            },
-            style: {
-              fill: 'rgba(144, 238, 144, 0.5)' // lightgreen
-            },
-            z: -2
-          }
-        },
-        data: [0],
-        silent: true
-      },
-      {
-        name: 'Attraction A',
-        type: 'custom',
-        color: 'rgb(135, 206, 250)', // light sky blue - solid color for legend
-        renderItem: (params, api) => {
-          const x0 = api.coord([0, canonicalB.y])
-          const x1 = api.coord([canonicalA.x, canonicalA.y])
-          return {
-            type: 'rect',
-            shape: {
-              x: x0[0],
-              y: x1[1],
-              width: x1[0] - x0[0],
-              height: x0[1] - x1[1]
-            },
-            style: {
-              fill: 'rgba(135, 206, 250, 0.5)' // light sky blue
-            },
-            z: -2
-          }
-        },
-        data: [0],
-        silent: true
-      },
-      {
-        name: 'Comp/Sim',
-        type: 'custom',
-        color: 'rgb(255, 255, 0)', // yellow - solid color for legend
-        renderItem: (params, api) => {
-          const x0 = api.coord([canonicalA.x, canonicalB.y])
-          const x1 = api.coord([canonicalB.x, canonicalA.y])
-          return {
-            type: 'rect',
-            shape: {
-              x: x0[0],
-              y: x1[1],
-              width: x1[0] - x0[0],
-              height: x0[1] - x1[1]
-            },
-            style: {
-              fill: 'rgba(255, 255, 0, 0.5)' // yellow
-            },
-            z: -2
-          }
-        },
-        data: [0],
-        silent: true
-      },
-      {
-        name: 'Attraction B',
-        type: 'custom',
-        color: 'rgb(70, 130, 180)', // steel blue - solid color for legend
-        renderItem: (params, api) => {
-          const x0 = api.coord([canonicalA.x, 0])
-          const x1 = api.coord([canonicalB.x, canonicalB.y])
-          return {
-            type: 'rect',
-            shape: {
-              x: x0[0],
-              y: x1[1],
-              width: x1[0] - x0[0],
-              height: x0[1] - x1[1]
-            },
-            style: {
-              fill: 'rgba(70, 130, 180, 0.5)' // steel blue
-            },
-            z: -2
-          }
-        },
-        data: [0],
-        silent: true
-      },
-      {
-        name: 'Superior',
-        type: 'custom',
-        color: 'rgb(250, 128, 114)', // salmon - solid color for legend
-        renderItem: (params, api) => {
-          const x0 = api.coord([canonicalB.x, canonicalA.y])
-          const x1 = api.coord([1, 1])
-          return {
-            type: 'rect',
-            shape: {
-              x: x0[0],
-              y: x1[1],
-              width: x1[0] - x0[0],
-              height: x0[1] - x1[1]
-            },
-            style: {
-              fill: 'rgba(250, 128, 114, 0.5)' // salmon
-            },
-            z: -2
-          }
-        },
-        data: [0],
-        silent: true
-      },
+    // Legend color carriers (invisible series)
     {
+      id: 'legend-inferior',
+      name: 'Inferior',
+      type: 'scatter',
+      data: [],
+      itemStyle: { color: 'rgba(144, 238, 144, 0.8)' },
+      silent: true
+    },
+    {
+      id: 'legend-attraction-a',
+      name: 'Attraction A',
+      type: 'scatter',
+      data: [],
+      itemStyle: { color: 'rgba(173, 216, 230, 0.8)' },
+      silent: true
+    },
+    {
+      id: 'legend-attraction-b',
+      name: 'Attraction B',
+      type: 'scatter',
+      data: [],
+      itemStyle: { color: 'rgba(135, 206, 235, 0.8)' },
+      silent: true
+    },
+    {
+      id: 'legend-comp-sim',
+      name: 'Comp/Sim',
+      type: 'scatter',
+      data: [],
+      itemStyle: { color: 'rgba(255, 255, 0, 0.8)' },
+      silent: true
+    },
+    {
+      id: 'legend-superior',
+      name: 'Superior',
+      type: 'scatter',
+      data: [],
+      itemStyle: { color: 'rgba(250, 128, 114, 0.8)' },
+      silent: true
+    },
+    // Regions layer (uses markArea) — always present to allow smooth updates
+    {
+      id: 'regions',
+      type: 'line',
+      silent: true,
+      lineStyle: { opacity: 0 },
+      data: [],
+      markArea: {
+        silent: true,
+        label: { show: false },
+        itemStyle: { color: 'rgba(0,0,0,0.0)' },
+        data: regionRects.length > 0
+          ? regionRects.map(r => ([
+              { itemStyle: { color: r.color }, ...r.coords[0][0] },
+              { ...r.coords[0][1] }
+            ]))
+          : []
+      }
+    },
+    {
+      id: 'points',
       type: 'scatter',
       data: [
         { name: 'A', value: [points.A.x, points.A.y], itemStyle: { color: '#0066cc' } },
@@ -618,6 +656,7 @@ const getChartOptions = () => {
       }
     },
     {
+      id: 'triangle',
       type: 'line',
       data: [
         [points.A.x, points.A.y],
@@ -702,8 +741,8 @@ const initChart = () => {
       if (pointInGrid && pointInGrid[0] >= 0 && pointInGrid[0] <= 1 && 
           pointInGrid[1] >= 0 && pointInGrid[1] <= 1) {
         
-        // Check if shift is pressed and point is inside triangle
-        if (e.event.shiftKey && isPointInTriangle(
+        // Check if Shift+Space is active and point is inside triangle
+        if (e.event.shiftKey && isShiftPressed.value && isPointInTriangle(
           pointInGrid[0], pointInGrid[1],
           points.A.x, points.A.y,
           points.B.x, points.B.y,
@@ -794,7 +833,8 @@ const initChart = () => {
 // Update chart
 const updateChart = () => {
   if (chartInstance) {
-    chartInstance.setOption(getChartOptions())
+    // Merge updates to allow smooth animation; regions series stays but empties when needed
+    chartInstance.setOption(getChartOptions(), false)
   }
 }
 
@@ -973,19 +1013,25 @@ const handleResize = () => {
 
 // Handle shift key press
 const handleKeyDown = (e) => {
-  if (e.key === 'Shift') {
+  // Activate triangle mode only when both Shift and Space are down
+  if (e.code === 'Space' || e.key === 'Shift') {
     // Don't activate shift mode if user is typing in an input field
     const activeElement = document.activeElement
     if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
       return
     }
-    isShiftPressed.value = true
+    // If Space is pressed with Shift, enable mode
+    if (e.code === 'Space' && e.shiftKey) {
+      e.preventDefault()
+      isShiftPressed.value = true
+    }
   }
 }
 
 // Handle shift key release
 const handleKeyUp = (e) => {
-  if (e.key === 'Shift') {
+  // On release of either Shift or Space, disable triangle mode
+  if (e.key === 'Shift' || e.code === 'Space') {
     isShiftPressed.value = false
   }
 }
